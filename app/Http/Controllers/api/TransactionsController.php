@@ -53,20 +53,20 @@ class TransactionsController extends Controller
         if ($transactionRef) {
             //on creating the transaction send the payload to TRA
 
+            //success post to KRA return Response
             $includes = ['customer'];
-
             $response = [
                 'error' => false,
                 'message' => 'Transaction Created Successfully',
                 'transaction' => fractal()
                     ->item($transaction, new TransactionTransformer())
-                     ->parseIncludes($includes)
+                    ->parseIncludes($includes)
                     ->serializeWith(new ArraySerializer())
             ];
 
             return response()->json($response, 200, [], JSON_PRETTY_PRINT);
         } else {
-            return response()->json(Json::response(true, 'Something went wrong please try again'), 400);
+            return response()->json(Json::response(true, 'OOps ! Something went wrong please try again'), 400);
         }
 
     }
