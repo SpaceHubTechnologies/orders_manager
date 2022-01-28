@@ -27,9 +27,15 @@ class PostTransactionRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'amount' => ['required'],
             'customer_id' => ['required'],
-            'payment_status' => ['required']
+            'code_sale_master' => ['unique:transactions', 'required'],
+            'status' => ['required'],
+            'last_update' => ['required'],
+            'payment_method' => ['required'],
+            'total_value' => ['required'],
+            'total_paid' => ['required'],
+            'sale_type' => ['required'],
+            'description' => ['required'],
         ];
     }
 

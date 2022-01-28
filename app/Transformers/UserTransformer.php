@@ -4,18 +4,10 @@ namespace App\Transformers;
 
 use App\Models\User;
 use Exception;
-use Illuminate\Support\Collection;
-use League\Fractal\Resource\Item;
 use League\Fractal\TransformerAbstract;
 
 class UserTransformer extends TransformerAbstract
 {
-    /**
-     * List of resources possible to include
-     *
-     * @var array
-     */
-    protected $availableIncludes = ['roles', 'wallet'];
 
     public function transform(User $user): array
     {
@@ -32,11 +24,10 @@ class UserTransformer extends TransformerAbstract
             'id' => $user->id,
             'first_name' => $user->first_name,
             'last_name' => $user->last_name,
-            'display_name' => $user->name,
             'email' => $user->email,
             'phone' => $user->phone,
             'address' => $user->address,
-            'access_token'=> $access_token,
+          /*  'access_token'=> $access_token,*/
         ];
     }
 

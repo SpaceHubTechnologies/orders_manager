@@ -15,19 +15,20 @@ class CreateTransactionsTable extends Migration
     {
         Schema::create('transactions', function (Blueprint $table) {
             $table->id();
-            $table->unsignedBigInteger('user_id')->nullable();
-            //$table->unsignedInteger('wallet_id')->nullable();
+            $table->unsignedBigInteger('customer_id')->nullable();
+            $table->string('code_sale_master')->unique();
+            $table->integer('status');
             $table->string('reference')->unique();
-            $table->enum('type', ['credit', 'debit'])->comment('Type of transaction credit/debit');
-            $table->string('payment_gateway')->default('mpesa');
-            $table->double('amount', 10, 2);
-            $table->double('charge')->default(0.00);
-
-            //$table->double('balance', 10, 2)->default(0);
-            $table->longText('comments')->nullable()->comment('Details of this transaction');
+            $table->text('date_sale');
+            $table->text('last_update');
+            $table->string('payment_method');
+            $table->double('total_value');
+            $table->double('total_paid');
+            $table->string('sale_type');
+            $table->longText('description')->nullable()->comment('Details of this transaction');
             $table->timestamps();
 
-            $table->foreign('user_id')
+            $table->foreign('customer_id')
                 ->references('id')
                 ->on('users')
                 ->onUpdate('cascade')

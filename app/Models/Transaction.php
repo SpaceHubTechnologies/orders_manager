@@ -35,6 +35,26 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
  * @method static Builder|Transaction whereCharge($value)
  * @method static Builder|Transaction wherePaymentGateway($value)
  * @property-read \App\Models\User|null $customer
+ * @property int|null $customer_id
+ * @property string $code_sale_master
+ * @property int $status
+ * @property string $date_sale
+ * @property string $last_update
+ * @property string $payment_method
+ * @property float $total_value
+ * @property float $total_paid
+ * @property string $sale_type
+ * @property string|null $description Details of this transaction
+ * @method static Builder|Transaction whereCodeSaleMaster($value)
+ * @method static Builder|Transaction whereCustomerId($value)
+ * @method static Builder|Transaction whereDateSale($value)
+ * @method static Builder|Transaction whereDescription($value)
+ * @method static Builder|Transaction whereLastUpdate($value)
+ * @method static Builder|Transaction wherePaymentMethod($value)
+ * @method static Builder|Transaction whereSaleType($value)
+ * @method static Builder|Transaction whereStatus($value)
+ * @method static Builder|Transaction whereTotalPaid($value)
+ * @method static Builder|Transaction whereTotalValue($value)
  */
 class Transaction extends Model
 {

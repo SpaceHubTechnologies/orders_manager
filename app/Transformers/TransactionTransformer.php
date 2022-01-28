@@ -5,6 +5,7 @@ namespace App\Transformers;
 use App\Models\Transaction;
 use App\Models\User;
 use League\Fractal\Resource\Collection;
+use League\Fractal\Resource\Item;
 use League\Fractal\TransformerAbstract;
 
 class TransactionTransformer extends TransformerAbstract
@@ -19,24 +20,26 @@ class TransactionTransformer extends TransformerAbstract
     public function transform(Transaction $transaction): array
     {
         return [
-            "Reference" => $transaction->reference,
-            "amount" => $transaction->amount,
-            "charges" => $transaction->charge,
-            "details" => $transaction->comments,
-            "Channel" => $transaction->payment_gateway,
-            "created_at" => $transaction->created_at,
+            "reference" => $transaction->reference,
+            "code_sale_master" => $transaction->code_sale_master,
+            "total_value" => $transaction->total_value,
+            "total_paid" => $transaction->total_paid,
+            "sale_type" => $transaction->sale_type,
+            "date_sale" => $transaction->date_sale,
+            "last_update" => $transaction->last_update,
+            "description" => $transaction->description,
         ];
 
     }
 
     /**
-     * @param User $user
-     * @return Collection
+     * @param Transaction $transaction
+     * @return Item
      */
-    public function includeCustomer(Transaction $transaction): Collection
+    public function includeCustomer(Transaction $transaction): Item
     {
-        //return a role if user has one
-        return $this->collection($transaction->customer, new UserTransformer());
+        return $this->item($transaction->customer, new UserTransformer(), 'customer');
+
 
     }
 
