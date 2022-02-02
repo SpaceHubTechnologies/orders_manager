@@ -97,7 +97,7 @@ class TraInvoiceService
         //if all false generate  the token
         $ackCode = $xmlACKRegistration->EFDMSRESP->ACKCODE;
         /* 0 = Response Code for Successful Registration */
-        if ($ackCode == 0)  {
+        if ($ackCode == 0) {
             $username = $xmlACKRegistration->EFDMSRESP->USERNAME;
             $password = $xmlACKRegistration->EFDMSRESP->PASSWORD;
             $routingKey = $xmlACKRegistration->EFDMSRESP->ROUTINGKEY;
@@ -116,12 +116,13 @@ class TraInvoiceService
             $token = $tokenACKData['access_token'];
 
             //post the invoice
-            $response = $this->postInvoice($receiptCode, $routingKey, );
+            $response = $this->postInvoice($receiptCode, $routingKey,);
 
         } else {
             $ackMsg = $xmlACKRegistration->EFDMSRESP->ACKMSG;
             return 'Error ' . $ackMsg;
         }
+        return $response;
     }
 
 
@@ -133,6 +134,7 @@ class TraInvoiceService
 
 
         $token = $this->getToken();
+        $RCTVNUM = $receiptCode . $this->GC;
         $payloadData = "<RCT><DATE>2019- 09 -25</DATE><TIME>11:38:00</TIME><TIN>111111111</TIN><REGID>TZ090055567</REGID><EFDSERIAL>10TZ999999</EFDSERIAL><CUSTIDTYPE>1</CUSTIDTYPE><CUSTID>111222333</CUSTID><CUSTNAME>RichardKazimoto</CUSTNAME><MOBILENUM>0713655545</MOBILENUM><RCTNUM>1</RCTNUM><DC>1</DC><GC>1</GC><ZNUM>20190625</ZNUM><RCTVNUM>GU72D81</RCTVNUM><ITEMS><ITEM><ID>1</ID><DESC>Sponsorship deal to TRAFC</DESC><QTY>1</QTY><TAXCODE>1</TAXCODE><AMT>20000.01</AMT></ITEM></ITEMS><TOTALS><TOTALTAXEXCL>18000.00</TOTALTAXEXCL><TOTALTAXINCL>38000.0</TOTALTAXINCL><DISCOUNT>0.00</DISCOUNT></TOTALS><PAYMENTS><PMTTYPE>CASH</PMTTYPE><PMTAMOUNT>50000.00</PMTAMOUNT><PMTTYPE>CHEQUE</PMTTYPE><PMTAMOUNT>100000.00</PMTAMOUNT><PMTTYPE>CCARD</PMTTYPE><PMTAMOUNT>68000.00</PMTAMOUNT><PMTTYPE>EMONEY</PMTTYPE><PMTAMOUNT>0.00</PMTAMOUNT></PAYMENTS><VATTOTALS><VATRATE>A</VATRATE><NETTAMOUNT>100000.00</NETTAMOUNT><TAXAMOUNT>16500.00</TAXAMOUNT><VATRATE>B</VATRATE><NETTAMOUNT>100000.00</NETTAMOUNT><TAXAMOUNT>0.00</TAXAMOUNT><VATRATE>C</VATRATE><NETTAMOUNT>100000.00</NETTAMOUNT><TAXAMOUNT>0.00</TAXAMOUNT></VATTOTALS></RCT>";
 
         $payloadDataSignatureReceipt = $this->signPayloadPlain($payloadData, $this->publicKey);
@@ -191,7 +193,7 @@ class TraInvoiceService
         if ($headers != '') {
             curl_setopt($curl, CURLOPT_HTTPHEADER, $headers);
         } else {
-            curl_setopt($curl, CURLOPT_HTTPHEADER, array('Content-Type: application/x-www-form-urlencoded')); // For Token Authentication
+            curl_setopt($curl, CURLOPT_HTTPHEADER, array('Content-Type: application/x-www-form-urlencoded'));
 
         }
         curl_setopt($curl, CURLOPT_POST, true);
