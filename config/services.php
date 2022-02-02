@@ -29,5 +29,18 @@ return [
         'secret' => env('AWS_SECRET_ACCESS_KEY'),
         'region' => env('AWS_DEFAULT_REGION', 'us-east-1'),
     ],
+    'TRA' => [
+        'registerURL' => 'https://vfd.tra.go.tz/api/vfdRegReq',
+        'registerTestURL' => 'https://virtual.tra.go.tz/efdmsRctApi/api/vfdRegReq',
+        'postInvoiceURL' => 'https://vfd.tra.go.tz/api/vfdRegReq',
+        'postInvoiceTestURL' => 'https://virtual.tra.go.tz/efdmsRctApi/api/efdmsRctInfo',
+        'TestInvoiceURL' => 'https://virtual.tra.go.tz/efdmsRctVerify',
+        'TestTokenURL' => 'https://virtual.tra.go.tz/efdmsRctApi/api/vfdRegReq',
+        'TokenURL' => 'https://virtual.tra.go.tz/efdmsRctApi/api/vfdRegReq',
+        'ZReportInvoicesTest' => 'https://virtual.tra.go.tz/efdmsRctApi/api/vfdRegReq',
+        'ZReportInvoices' => 'https://virtual.tra.go.tz/efdmsRctApi/api/vfdRegReq',
+        'TIN' => '',
+        'CertKey' => '',
+    ],
 
 ];

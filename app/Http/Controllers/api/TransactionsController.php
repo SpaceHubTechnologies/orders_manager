@@ -4,6 +4,7 @@ namespace App\Http\Controllers\api;
 
 use App\Http\Controllers\Controller;
 use App\Http\Requests\PostTransactionRequest;
+use App\Jobs\PostInvoice;
 use App\Models\Transaction;
 use App\Transformers\Json;
 use App\Transformers\TransactionTransformer;
@@ -53,7 +54,11 @@ class TransactionsController extends Controller
         if ($transactionRef) {
             //on creating the transaction send the payload to TRA
 
-            //success post to KRA return Response
+
+            //call TRA services
+            dispatch(new PostInvoice($transaction));
+
+            //success post to TRA return Response
             $includes = ['customer'];
             $response = [
                 'error' => false,
