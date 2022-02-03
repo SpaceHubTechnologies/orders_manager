@@ -36,10 +36,10 @@ class PostTransactionRequest extends FormRequest
             'total_paid' => ['required'],
             'sale_type' => ['required'],
             'customerIdType' => ['required'],
-            'customerId' => ['required'],
+        /*    'customerId' => ['required'],
             'customerName' => ['required'],
             'mobileNumber' => ['required'],
-            'description' => ['required'],
+            'description' => ['required'],*/
         ];
     }
 

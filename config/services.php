@@ -39,8 +39,8 @@ return [
         'TokenURL' => 'https://virtual.tra.go.tz/efdmsRctApi/api/vfdRegReq',
         'ZReportInvoicesTest' => 'https://virtual.tra.go.tz/efdmsRctApi/api/vfdRegReq',
         'ZReportInvoices' => 'https://virtual.tra.go.tz/efdmsRctApi/api/vfdRegReq',
-        'TIN' => '',
-        'CertKey' => '',
+        'TIN' => '110781512',
+        'CertKey' => '10TZ100359',
     ],
 
 ];

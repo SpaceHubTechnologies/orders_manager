@@ -30,6 +30,61 @@ if (!function_exists('transaction_code_exist')) {
     {
         return Transaction::whereReference($txn_code)->exists();
     }
+
 }
+
+if (!function_exists('getTransactionTime')) {
+    function getTransactionTime($transactionID): string
+    {
+        $transaction = Transaction::whereId($transactionID)->first();
+        $time = $transaction->created_at;
+        return $time->format('H:i:s');
+
+    }
+}
+
+if (!function_exists('getTransactionDate')) {
+    function getTransactionDate($transactionID): string
+    {
+        $transaction = Transaction::whereId($transactionID)->first();
+        $date = $transaction->created_at;
+        return $date->format('Y:m:d');
+
+    }
+}
+
+if (!function_exists('generateRCTNo')) {
+    function generateRCTNo($transactionID): string
+    {
+        $transaction = Transaction::whereId($transactionID)->first();
+        return $transaction->created_at->format('Y:m:d');
+
+    }
+}
+if (!function_exists('getDailyCounter')) {
+    function getDailyCounter(Transaction $transaction)
+    {
+
+    }
+}
+
+if (!function_exists('getZnum')) {
+    function getZnum()
+    {
+        $data = date('y.m.d');
+
+        return 202220203;
+
+    }
+}
+
+if (!function_exists('generateRecieptNo')) {
+    function generateRecieptNo()
+    {
+
+
+    }
+}
+
 
 

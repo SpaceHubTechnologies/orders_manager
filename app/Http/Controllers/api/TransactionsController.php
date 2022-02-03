@@ -6,16 +6,20 @@ use App\Http\Controllers\Controller;
 use App\Http\Requests\PostTransactionRequest;
 use App\Jobs\PostInvoice;
 use App\Models\Transaction;
+use App\Services\TraInvoiceService;
 use App\Transformers\Json;
 use App\Transformers\TransactionTransformer;
 use App\Transformers\UserTransformer;
-use Illuminate\Http\Request;
+use GuzzleHttp\Exception\GuzzleException;
 use Illuminate\Support\Facades\DB;
-use League\Fractal\Serializer\ArraySerializer;
 
 class TransactionsController extends Controller
 {
-    public function createTransaction(PostTransactionRequest $request): \Illuminate\Http\JsonResponse
+    /**
+     * @throws GuzzleException
+     * @throws \Exception
+     */
+    public function createTransaction(PostTransactionRequest $request)
     {
         //check if user is logged in
 
@@ -56,20 +60,26 @@ class TransactionsController extends Controller
 
 
             //call TRA services
-            dispatch(new PostInvoice($transaction));
+            //dispatch(new PostInvoice($transaction));
+
+           // $response = (new TraInvoiceService())->postInvoice($transaction);
+            $response = (new TraInvoiceService())->Register();
+
 
             //success post to TRA return Response
             $includes = ['customer'];
-            $response = [
+            /*$response = [
                 'error' => false,
                 'message' => 'Transaction Created Successfully',
                 'transaction' => fractal()
                     ->item($transaction, new TransactionTransformer())
                     ->parseIncludes($includes)
                     ->serializeWith(new ArraySerializer())
-            ];
+            ];*/
 
-            return response()->json($response, 200, [], JSON_PRETTY_PRINT);
+            return $response;
+
+            //return response()->json($response, 200, [], JSON_PRETTY_PRINT);
         } else {
             return response()->json(Json::response(true, 'OOps ! Something went wrong please try again'), 400);
         }

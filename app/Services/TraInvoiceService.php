@@ -2,9 +2,8 @@
 
 namespace App\Services;
 
+use App\Models\Transaction;
 use Exception;
-use GuzzleHttp\Client;
-use GuzzleHttp\Exception\GuzzleException;
 use Illuminate\Support\Facades\Log;
 use SimpleXMLElement;
 
@@ -16,13 +15,16 @@ class TraInvoiceService
      *
      * @var string
      */
-    private $url;
     private $tin;
     private $certKey;
     private $RCTNUM = 1;
     private $GC;
     private $publicKey;
     private $certBase;
+    private $username;
+    private $password;
+    private $routingKey;
+    private $regID;
 
     private $xml_doc = "<?xml version='1.0' encoding='UTF-8'?>";
     private $efdms_open = "<EFDMS>";
@@ -43,111 +45,145 @@ class TraInvoiceService
         $this->tin = config('services.TRA.TIN');
         $this->certKey = config('services.TRA.CertKey');
         $this->GC = $this->RCTNUM;
+        $this->username = "babaadfj8490urjt";
+        $this->password = "cG1pe1eH9q^WOT5=";
+        $this->routingKey = "vfdrct";
+        $this->regID = "TZ010055721";
 
         // Extract Client Public and Private Digital Signatures
-        $cert_store = file_get_contents('vfdClient.pfx');
-        $clientSignature = openssl_pkcs12_read($cert_store, $cert_info, 'Password');
+        $path = storage_path() . '/' . 'app/public/vfdPergamon.pfx';
+
+        $cert_store = file_get_contents($path);
+        $clientSignature = openssl_pkcs12_read($cert_store, $cert_info, 'Peg@m0n9');
         $privateKey = $cert_info['pkey'];
         $this->publicKey = openssl_get_privatekey($privateKey);
-        $this->certBase = base64_encode('15 70 1e 15 39 94 7e ab 46 1f 0c f1 33 bc ac c9');
+        $this->certBase = base64_encode('69 c5 af 9d 61 81 34 94 44 b6 2a 39 ed 99 1e 3f');
     }
 
 
     /**
-     * @throws GuzzleException
      * @throws Exception
      */
-    public function Register(): SimpleXMLElement
+    public function Register()
     {
         //check if the user data exists
 
 
         // Compute Signature with SHA1
         $payloadData = "<REGDATA><TIN>$this->tin</TIN><CERTKEY>$this->certKey</CERTKEY></REGDATA>";
-        $payloadDataSignature = $this->signPayloadPlain($payloadData, $this->publicKey);
+        $payloadDataSignature = $this->signPayloadPlain($payloadData);
         $signedMessageRegistration = $this->xml_doc . $this->efdms_open . $payloadData . $this->efdms_signatureOpen . $payloadDataSignature . $this->efdms_signatureClose . $this->efdms_close;
-
+        Log::info($signedMessageRegistration);
         //send out the Registration Request
-        $client = new Client();
-        $registrationACK = $client->request('POST', $this->url, [
-            'headers' => [
-                'Content-type: application/xml',
-                'Cert-Serial: ' . $this->certBase,
-                'Client: WEBAPI'
-            ],
-            'body' => $signedMessageRegistration
-        ]);
+
+        // Send Request To TRA for Registration
+        $urlReceipt = 'https://virtual.tra.go.tz/efdmsRctApi/api/vfdRegReq';
+        $headers = array(
+            'Content-type: application/xml',
+            'Cert-Serial: ' . $this->certBase,
+            'Client: WEBAPI'
+        );
+
+        $registrationACK = $this->sendRequest($urlReceipt, $headers, $signedMessageRegistration);
+        Log::info($registrationACK);
         return new SimpleXMLElement($registrationACK);
 
     }
 
+
     /**
      * @throws Exception
-     * @throws GuzzleException
      */
     public function getToken()
     {
-        //check if the token is expired or empty
 
-        //check if the registration was a success
+        // $traToken = Session::get('TRA_token');
+        //if (empty($traToken)) {
+        $username = $this->username;
+        $password = $this->password;
+        $urlReceipt = 'https://virtual.tra.go.tz/efdmsRctApi/vfdtoken';
+        $headers = '';
+        $authenticationData = "username=$username&password=$password&grant_type=password";
+        $tokenACKData = $this->sendRequest($urlReceipt, $headers, $authenticationData);
+        Log::info($tokenACKData);
+        $token = $tokenACKData['access_token'];
 
-        //if expired  register again
-        $xmlACKRegistration = $this->register();
+        session(['TRA_token' => $token]);
 
-        //if all false generate  the token
-        $ackCode = $xmlACKRegistration->EFDMSRESP->ACKCODE;
-        /* 0 = Response Code for Successful Registration */
-        if ($ackCode == 0) {
-            $username = $xmlACKRegistration->EFDMSRESP->USERNAME;
-            $password = $xmlACKRegistration->EFDMSRESP->PASSWORD;
-            $routingKey = $xmlACKRegistration->EFDMSRESP->ROUTINGKEY;
-            $registrationID = $xmlACKRegistration->EFDMSRESP->REGID;
-            $receiptCode = $xmlACKRegistration->EFDMSRESP->RECEIPTCODE;
-            $UIN = $xmlACKRegistration->EFDMSRESP->UIN;
-            $urlReceipt = 'https://virtual.tra.go.tz/efdmsRctApi/vfdtoken';
-            $headers = '';
-            $authenticationData = "username=$username&password=$password&grant_type=password";
-
-            Log::info($authenticationData);
-
-            $tokenACKData = $this->sendRequest($urlReceipt, $headers, $authenticationData);
-            //save this token in the session
-
-            $token = $tokenACKData['access_token'];
-
-            //post the invoice
-            $response = $this->postInvoice($receiptCode, $routingKey,);
-
-        } else {
-            $ackMsg = $xmlACKRegistration->EFDMSRESP->ACKMSG;
-            return 'Error ' . $ackMsg;
-        }
-        return $response;
+        return $token;
     }
 
 
     /**
-     * @throws Exception|GuzzleException
+     * @throws Exception
      */
-    public function postInvoice($receiptCode, $routingKey): array
+    public function postInvoice(Transaction $transaction): array
     {
+
+        $receiptNO = "L9V2PU" . $transaction->id;
+        $transactionDate = getTransactionDate($transaction->id);
+        $transactionTime = getTransactionTime($transaction->id);
 
 
         $token = $this->getToken();
-        $RCTVNUM = $receiptCode . $this->GC;
-        $payloadData = "<RCT><DATE>2019- 09 -25</DATE><TIME>11:38:00</TIME><TIN>111111111</TIN><REGID>TZ090055567</REGID><EFDSERIAL>10TZ999999</EFDSERIAL><CUSTIDTYPE>1</CUSTIDTYPE><CUSTID>111222333</CUSTID><CUSTNAME>RichardKazimoto</CUSTNAME><MOBILENUM>0713655545</MOBILENUM><RCTNUM>1</RCTNUM><DC>1</DC><GC>1</GC><ZNUM>20190625</ZNUM><RCTVNUM>GU72D81</RCTVNUM><ITEMS><ITEM><ID>1</ID><DESC>Sponsorship deal to TRAFC</DESC><QTY>1</QTY><TAXCODE>1</TAXCODE><AMT>20000.01</AMT></ITEM></ITEMS><TOTALS><TOTALTAXEXCL>18000.00</TOTALTAXEXCL><TOTALTAXINCL>38000.0</TOTALTAXINCL><DISCOUNT>0.00</DISCOUNT></TOTALS><PAYMENTS><PMTTYPE>CASH</PMTTYPE><PMTAMOUNT>50000.00</PMTAMOUNT><PMTTYPE>CHEQUE</PMTTYPE><PMTAMOUNT>100000.00</PMTAMOUNT><PMTTYPE>CCARD</PMTTYPE><PMTAMOUNT>68000.00</PMTAMOUNT><PMTTYPE>EMONEY</PMTTYPE><PMTAMOUNT>0.00</PMTAMOUNT></PAYMENTS><VATTOTALS><VATRATE>A</VATRATE><NETTAMOUNT>100000.00</NETTAMOUNT><TAXAMOUNT>16500.00</TAXAMOUNT><VATRATE>B</VATRATE><NETTAMOUNT>100000.00</NETTAMOUNT><TAXAMOUNT>0.00</TAXAMOUNT><VATRATE>C</VATRATE><NETTAMOUNT>100000.00</NETTAMOUNT><TAXAMOUNT>0.00</TAXAMOUNT></VATTOTALS></RCT>";
 
-        $payloadDataSignatureReceipt = $this->signPayloadPlain($payloadData, $this->publicKey);
-        $signedMessageReceipt = $this->efdms_open . $this->efdms_open . $payloadData . $this->efdms_signatureOpen . $payloadDataSignatureReceipt . $this->efdms_signatureClose . $this->efdms_close;
+        $payloadData = "<RCT>
+<DATE>$transactionDate</DATE>
+<TIME>$transactionTime</TIME>
+<TIN>110781512</TIN>
+<REGID>TZ010055721</REGID>
+<EFDSERIAL>10TZ100359</EFDSERIAL>
+<CUSTIDTYPE>1</CUSTIDTYPE>
+<CUSTID>111222333</CUSTID>
+<CUSTNAME>RichardKazimoto</CUSTNAME>
+<MOBILENUM>0713655545</MOBILENUM>
+<RCTNUM>$transaction->id</RCTNUM>
+<DC>$transaction->id</DC>
+<GC>$transaction->id</GC>
+<ZNUM>getZnum()</ZNUM>
+<RCTVNUM>$receiptNO</RCTVNUM>
+<ITEMS>
+<ITEM>
+<ID>1</ID>
+<DESC>Sponsorship deal to TRAFC</DESC>
+<QTY>1</QTY>
+<TAXCODE>1</TAXCODE>
+<AMT>20000.01</AMT>
+</ITEM>
+</ITEMS>
+<TOTALS>
+<TOTALTAXEXCL>$transaction->total_value</TOTALTAXEXCL>
+<TOTALTAXINCL>38000.0</TOTALTAXINCL>
+<DISCOUNT>0.00</DISCOUNT>
+</TOTALS>
+<PAYMENTS>
+<PMTTYPE>CASH</PMTTYPE>
+<PMTAMOUNT>$transaction->total_value</PMTAMOUNT>
+
+</PAYMENTS>
+<VATTOTALS>
+<VATRATE>A</VATRATE>
+<NETTAMOUNT>$transaction->total_value</NETTAMOUNT>
+<TAXAMOUNT>0.00</TAXAMOUNT>
+</VATTOTALS>
+</RCT>
+";
+
+        $payloadDataSignatureReceipt = $this->signPayloadPlain($payloadData);
+
+        $signedMessageReceipt = $this->xml_doc . $this->efdms_open . $payloadData . $this->efdms_signatureOpen . $payloadDataSignatureReceipt . $this->efdms_signatureClose . $this->efdms_close;
+
+
+        Log::info($signedMessageReceipt);
 
         $urlReceipt = 'https://virtual.tra.go.tz/efdmsRctApi/api/efdmsRctInfo';
 
         $headers = array(
             'Content-type: application/xml',
-            'Routing-Key: ' . $routingKey,
+            'Routing-Key: ' . $this->routingKey,
             'Cert-Serial: ' . $this->certBase,
             'Client: WEBAPI',
-            'Authorization: Bearer ' . $token
+            'Authorization: bearer ' . $token
         );
 
         $receiptACK = $this->sendRequest($urlReceipt, $headers, $signedMessageReceipt);
@@ -156,6 +192,7 @@ class TraInvoiceService
         $xmlACKReceipt = new SimpleXMLElement($receiptACK);
         $ackCodeReceipt = $xmlACKReceipt->RCTACK->ACKCODE;
         $ackReceiptMessage = $xmlACKReceipt->RCTACK->ACKMSG;
+
 
         $response["code"] = $ackCodeReceipt;
         $response["message"] = $ackReceiptMessage;
@@ -168,12 +205,11 @@ class TraInvoiceService
     /**
      * Compute signature with SHA-256
      * @param $payload_data
-     * @param $publicKey
      * @return string
      */
-    function signPayloadPlain($payload_data, $publicKey): string
+    function signPayloadPlain($payload_data): string
     {
-        openssl_sign($payload_data, $signature, $publicKey, OPENSSL_ALGO_SHA1);
+        openssl_sign($payload_data, $signature, $this->publicKey, OPENSSL_ALGO_SHA1);
         return base64_encode($signature);
     }
 
