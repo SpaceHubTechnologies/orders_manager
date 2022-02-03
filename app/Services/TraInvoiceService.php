@@ -123,53 +123,18 @@ class TraInvoiceService
         $receiptNO = "L9V2PU" . $transaction->id;
         $transactionDate = getTransactionDate($transaction->id);
         $transactionTime = getTransactionTime($transaction->id);
+        $znum = getZnum();
 
 
         $token = $this->getToken();
 
-        $payloadData = "<RCT>
-<DATE>$transactionDate</DATE>
-<TIME>$transactionTime</TIME>
-<TIN>110781512</TIN>
-<REGID>TZ010055721</REGID>
-<EFDSERIAL>10TZ100359</EFDSERIAL>
-<CUSTIDTYPE>1</CUSTIDTYPE>
-<CUSTID>111222333</CUSTID>
-<CUSTNAME>RichardKazimoto</CUSTNAME>
-<MOBILENUM>0713655545</MOBILENUM>
-<RCTNUM>$transaction->id</RCTNUM>
-<DC>$transaction->id</DC>
-<GC>$transaction->id</GC>
-<ZNUM>getZnum()</ZNUM>
-<RCTVNUM>$receiptNO</RCTVNUM>
-<ITEMS>
-<ITEM>
-<ID>1</ID>
-<DESC>Sponsorship deal to TRAFC</DESC>
-<QTY>1</QTY>
-<TAXCODE>1</TAXCODE>
-<AMT>20000.01</AMT>
-</ITEM>
-</ITEMS>
-<TOTALS>
-<TOTALTAXEXCL>$transaction->total_value</TOTALTAXEXCL>
-<TOTALTAXINCL>38000.0</TOTALTAXINCL>
-<DISCOUNT>0.00</DISCOUNT>
-</TOTALS>
-<PAYMENTS>
-<PMTTYPE>CASH</PMTTYPE>
-<PMTAMOUNT>$transaction->total_value</PMTAMOUNT>
+        $payloadData = "<RCT><DATE>$transactionDate</DATE>
+<TIME>$transactionTime</TIME><TIN>110781512</TIN><REGID>TZ010055721</REGID><EFDSERIAL>10TZ100359</EFDSERIAL><CUSTIDTYPE>1</CUSTIDTYPE><CUSTID>111222333</CUSTID><CUSTNAME>RichardKazimoto</CUSTNAME><MOBILENUM>0713655545</MOBILENUM><RCTNUM>$transaction->id</RCTNUM><DC>$transaction->id</DC><GC>$transaction->id</GC><ZNUM>$znum</ZNUM><RCTVNUM>$receiptNO</RCTVNUM><ITEMS><ITEM><ID>1</ID><DESC>Sponsorship deal to TRAFC</DESC><QTY>1</QTY><TAXCODE>1</TAXCODE><AMT>20000.01</AMT></ITEM></ITEMS><TOTALS><TOTALTAXEXCL>$transaction->total_value</TOTALTAXEXCL><TOTALTAXINCL>38000.0</TOTALTAXINCL><DISCOUNT>0.00</DISCOUNT></TOTALS><PAYMENTS><PMTTYPE>CASH</PMTTYPE><PMTAMOUNT>$transaction->total_value</PMTAMOUNT></PAYMENTS><VATTOTALS><VATRATE>A</VATRATE><NETTAMOUNT>$transaction->total_value</NETTAMOUNT><TAXAMOUNT>0.00</TAXAMOUNT></VATTOTALS></RCT>";
 
-</PAYMENTS>
-<VATTOTALS>
-<VATRATE>A</VATRATE>
-<NETTAMOUNT>$transaction->total_value</NETTAMOUNT>
-<TAXAMOUNT>0.00</TAXAMOUNT>
-</VATTOTALS>
-</RCT>
-";
+        Log::info($payloadData);
 
         $payloadDataSignatureReceipt = $this->signPayloadPlain($payloadData);
+        Log::info($payloadDataSignatureReceipt);
 
         $signedMessageReceipt = $this->xml_doc . $this->efdms_open . $payloadData . $this->efdms_signatureOpen . $payloadDataSignatureReceipt . $this->efdms_signatureClose . $this->efdms_close;
 
@@ -187,6 +152,8 @@ class TraInvoiceService
         );
 
         $receiptACK = $this->sendRequest($urlReceipt, $headers, $signedMessageReceipt);
+
+        Log::info($receiptACK);
 
 
         $xmlACKReceipt = new SimpleXMLElement($receiptACK);
