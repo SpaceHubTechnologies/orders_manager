@@ -224,26 +224,34 @@ class TraInvoiceService
         return $resultEfd;
     }
 
-    /*Commands:-
-	BLOCK:
 
-The aim for this command is to disable the system and stop it from issuing receipt and also display to user why system is blocked (Message from TRA)
+    public function blockReceipt()
+    {
 
-UNBLOCK:
+        /*The aim for this command is to disable the system and stop it from issuing receipt and also display to user why system is blocked (Message from TRA)*/
 
-	If System was blocked as above this command will unblock it and allow it to issue receipts
+    }
 
-RCTVCODE:
+    public function unBlockReceipt()
+    {
+        /*If System was blocked as above this command will unblock it and allow it to issue receipts*/
+    }
 
-	This command changes QR Code sequence i.e if it was 73281C TRA may change it to 54683D
+    public function RctVCode()
+    {
+        /*This command changes QR Code sequence i.e if it was 73281C TRA may change it to 54683D*/
+    }
 
-ENABLEVAT:
+    public function EnableVat()
+    {
+        //  if a trader is not registered for VAT (Not allowed to charge VAT)
+        // TRA may issue this command to allow him start charging VAT on items and their receipt/Zreport will display VRN number in the header (Instead of Not Registered)
+    }
 
-
-	If a trader is not registered for VAT (Not allowed to charge VAT) TRA may issue this command to allow him start charging VAT on items and their receipt/Zreport will display VRN number in the header (Instead of Not Registered)
-
-DISBLEVAT:
-	This command disable system (trader) from charging VAT in items sold and removes the VRN no from the receipt and Z Report header (Displays Not Registered)*/
-
-
+    public function DisAbleVat()
+    {
+        /* This command disable system (trader) from charging VAT in items sold and removes the VRN no from the receipt and Z Report header (Displays Not Registered)*/
+    }
 }
+
+
