@@ -3,8 +3,6 @@
 namespace App\Transformers;
 
 use App\Models\Transaction;
-use App\Models\User;
-use League\Fractal\Resource\Collection;
 use League\Fractal\Resource\Item;
 use League\Fractal\TransformerAbstract;
 

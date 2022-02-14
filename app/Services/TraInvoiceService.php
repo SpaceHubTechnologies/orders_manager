@@ -50,7 +50,7 @@ class TraInvoiceService
         $this->password = "Via(S3Ej0h3bjog[";
         $this->routingKey = "vfdrct";
         $this->regID = "TZ0100554863";
-        $this->efd_serial="10TZ100705";
+        $this->efd_serial = "10TZ100705";
 
         // Extract Client Public and Private Digital Signatures
         $path = storage_path() . '/' . 'app/public/VFD_PERGAMON_10TZ100705.pfx';
@@ -93,9 +93,6 @@ class TraInvoiceService
      */
     public function getToken()
     {
-
-        // $traToken = Session::get('TRA_token');
-        //if (empty($traToken)) {
         $username = $this->username;
         $password = $this->password;
         $urlReceipt = 'https://virtual.tra.go.tz/efdmsRctApi/vfdtoken';
@@ -122,8 +119,7 @@ class TraInvoiceService
         $transactionTime = getTransactionTime($transaction->id);
 
         $token = $this->getToken();
-
-       $payloadData = "<RCT><DATE>$transactionDate</DATE><TIME>$transactionTime</TIME><TIN>$this->tin</TIN><REGID>$this->regID</REGID><EFDSERIAL>$this->efd_serial</EFDSERIAL><CUSTIDTYPE>6</CUSTIDTYPE><CUSTID></CUSTID><CUSTNAME>tarimo shop manyanya mtambani</CUSTNAME><MOBILENUM></MOBILENUM><RCTNUM>1</RCTNUM><DC>1</DC><GC>2</GC><ZNUM>20210930</ZNUM><RCTVNUM>$receiptNO</RCTVNUM><ITEMS><ITEM><ID>609d20795e866461ac9a6563</ID><DESC>Mayonaise 12x946ml</DESC><QTY>11</QTY><TAXCODE>1</TAXCODE><AMT>602272.00</AMT></ITEM><ITEM><ID>609d20795e866461ac9a65af</ID><DESC>Peanut Butter 6x800gms</DESC><QTY>2</QTY><TAXCODE>1</TAXCODE><AMT>47011.20</AMT></ITEM><ITEM><ID>609d20795e866461affc9a6569</ID><DESC>Tomato sauce  Bei Bomba  5kgs</DESC><QTY>200</QTY><TAXCODE>1</TAXCODE><AMT>850780.00</AMT></ITEM></ITEMS><TOTALS><TOTALTAXEXCL>1271240.00</TOTALTAXEXCL><TOTALTAXINCL>1500063.2</TOTALTAXINCL><DISCOUNT>0.0</DISCOUNT></TOTALS><PAYMENTS><PMTTYPE>CASH</PMTTYPE><PMTAMOUNT>1500063.2</PMTAMOUNT></PAYMENTS><VATTOTALS><VATRATE>A</VATRATE><NETTAMOUNT>1271240.00</NETTAMOUNT><TAXAMOUNT>228823.20</TAXAMOUNT></VATTOTALS></RCT>";
+        $payloadData = "<RCT><DATE>$transactionDate</DATE><TIME>$transactionTime</TIME><TIN>$this->tin</TIN><REGID>$this->regID</REGID><EFDSERIAL>$this->efd_serial</EFDSERIAL><CUSTIDTYPE>6</CUSTIDTYPE><CUSTID></CUSTID><CUSTNAME>tarimo shop manyanya mtambani</CUSTNAME><MOBILENUM></MOBILENUM><RCTNUM>1</RCTNUM><DC>1</DC><GC>2</GC><ZNUM>20210930</ZNUM><RCTVNUM>$receiptNO</RCTVNUM><ITEMS><ITEM><ID>609d20795e866461ac9a6563</ID><DESC>Mayonaise 12x946ml</DESC><QTY>11</QTY><TAXCODE>1</TAXCODE><AMT>602272.00</AMT></ITEM><ITEM><ID>609d20795e866461ac9a65af</ID><DESC>Peanut Butter 6x800gms</DESC><QTY>2</QTY><TAXCODE>1</TAXCODE><AMT>47011.20</AMT></ITEM><ITEM><ID>609d20795e866461affc9a6569</ID><DESC>Tomato sauce  Bei Bomba  5kgs</DESC><QTY>200</QTY><TAXCODE>1</TAXCODE><AMT>850780.00</AMT></ITEM></ITEMS><TOTALS><TOTALTAXEXCL>1271240.00</TOTALTAXEXCL><TOTALTAXINCL>1500063.2</TOTALTAXINCL><DISCOUNT>0.0</DISCOUNT></TOTALS><PAYMENTS><PMTTYPE>CASH</PMTTYPE><PMTAMOUNT>1500063.2</PMTAMOUNT></PAYMENTS><VATTOTALS><VATRATE>A</VATRATE><NETTAMOUNT>1271240.00</NETTAMOUNT><TAXAMOUNT>228823.20</TAXAMOUNT></VATTOTALS></RCT>";
         $payloadDataSignatureReceipt = $this->signPayloadPlain($payloadData);
         $signedMessageReceipt = $this->xml_doc . $this->efdms_open . $payloadData . $this->efdms_signatureOpen . $payloadDataSignatureReceipt . $this->efdms_signatureClose . $this->efdms_close;
 
@@ -150,6 +146,35 @@ class TraInvoiceService
         return $response;
 
 
+    }
+
+    /**
+     * @throws Exception
+     */
+    public function postZReport(Transaction $transaction)
+    {
+        $transactionDate = getTransactionDate($transaction->id);
+        $transactionTime = getTransactionTime($transaction->id);
+
+        $token = $this->getToken();
+
+        $z_report = "<ZREPORT><DATE>$transactionDate</DATE><TIME>$transactionTime</TIME><HEADER><LINE>TEST TAXPAYER</LINE><LINE>PLOT:125/126/127,MAGOMENI STREET</LINE><LINE>TEL NO:+255 999999</LINE><LINE>DAR ES SALAAM,TANZANIA</LINE></HEADER><VRN>12345678A</VRN><TIN>222222222</TIN><TAXOFFICE>TEST REGION</TAXOFFICE><REGID>TZ0100082639</REGID><ZNUMBER>20201005</ZNUMBER><EFDSERIAL>10TZ107372</EFDSERIAL><REGISTRATIONDATE>2019- 08-15</REGISTRATIONDATE><USER>09VFDWEBAPI-11111111122222222210TZ107372</USER><SIMIMSI>WEBAPI</SIMIMSI><TOTALS><DAILYTOTALAMOUNT>2143250.00</DAILYTOTALAMOUNT><GROSS>513880841.00</GROSS><CORRECTIONS>0.00</CORRECTIONS><DISCOUNTS>0.00</DISCOUNTS><SURCHARGES>0.00</SURCHARGES><TICKETSVOID>0</TICKETSVOID><TICKETSVOIDTOTAL>0.00</TICKETSVOIDTOTAL><TICKETSFISCAL>36</TICKETSFISCAL><TICKETSNONFISCAL>6</TICKETSNONFISCAL></TOTALS><VATTOTALS><VATRATE>A-18.00</VATRATE><NETTAMOUNT>1816313.55</NETTAMOUNT><TAXAMOUNT>326936.45</TAXAMOUNT><VATRATE>B-0.00</VATRATE><NETTAMOUNT>0.00</NETTAMOUNT><TAXAMOUNT>0.00</TAXAMOUNT><VATRATE>C-0.00</VATRATE><NETTAMOUNT>0.00</NETTAMOUNT><TAXAMOUNT>0.00</TAXAMOUNT><VATRATE>D-0.00</VATRATE><NETTAMOUNT>0.00</NETTAMOUNT><TAXAMOUNT>0.00</TAXAMOUNT>VATRATE>E-0.00</VATRATE>NETTAMOUNT>0.00</NETTAMOUNT><TAXAMOUNT>0.00</TAXAMOUNT></VATTOTALS><PAYMENTS><PMTTYPE>CASH</PMTTYPE><PMTAMOUNT>2143250.00</PMTAMOUNT><PMTTYPE>CHEQUE</PMTTYPE><PMTAMOUNT>0.00</PMTAMOUNT><PMTTYPE>CCARD</PMTTYPE><PMTAMOUNT>0.00</PMTAMOUNT><PMTTYPE>EMONEY</PMTTYPE><PMTAMOUNT>0.00</PMTAMOUNT><PMTTYPE>INVOICE</PMTTYPE><PMTAMOUNT>0.00</PMTAMOUNT></PAYMENTS><CHANGES><VATCHANGENUM>0</VATCHANGENUM><HEADCHANGENUM>0</HEADCHANGENUM></CHANGES><ERRORS></ERRORS><FWVERSION>3.0</FWVERSION><FWCHECKSUM>WEBAPI</FWCHECKSUM></ZREPORT>";
+
+        $payloadDataZReport = $this->signPayloadPlain($z_report);
+        $signedMessageZReport = $this->xml_doc . $this->efdms_open . $z_report . $this->efdms_signatureOpen . $payloadDataZReport . $this->efdms_signatureClose . $this->efdms_close;
+
+
+        $urlZReport = 'https://virtual.tra.go.tz/efdmsRctApi/api/efdmszreport';
+
+        $headers = array(
+            'Content-type: application/xml',
+            'Routing-Key: ' . $this->routingKey,
+            'Cert-Serial: ' . $this->certBase,
+            'Client: WEBAPI',
+            'Authorization: bearer ' . $token
+        );
+
+        $zReportACK = $this->sendRequest($urlZReport, $headers, $signedMessageZReport);
     }
 
     /**
@@ -198,6 +223,27 @@ class TraInvoiceService
         curl_close($curl);
         return $resultEfd;
     }
+
+    /*Commands:-
+	BLOCK:
+
+The aim for this command is to disable the system and stop it from issuing receipt and also display to user why system is blocked (Message from TRA)
+
+UNBLOCK:
+
+	If System was blocked as above this command will unblock it and allow it to issue receipts
+
+RCTVCODE:
+
+	This command changes QR Code sequence i.e if it was 73281C TRA may change it to 54683D
+
+ENABLEVAT:
+
+
+	If a trader is not registered for VAT (Not allowed to charge VAT) TRA may issue this command to allow him start charging VAT on items and their receipt/Zreport will display VRN number in the header (Instead of Not Registered)
+
+DISBLEVAT:
+	This command disable system (trader) from charging VAT in items sold and removes the VRN no from the receipt and Z Report header (Displays Not Registered)*/
 
 
 }
