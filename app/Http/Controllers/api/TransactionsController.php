@@ -63,7 +63,7 @@ class TransactionsController extends Controller
             //dispatch(new PostInvoice($transaction));
 
             $response = (new TraInvoiceService())->postInvoice($transaction);
-         // $response = (new TraInvoiceService())->Register();
+            //$response = (new TraInvoiceService())->Register();
 
 
             //success post to TRA return Response

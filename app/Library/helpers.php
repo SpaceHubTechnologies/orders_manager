@@ -48,7 +48,7 @@ if (!function_exists('getTransactionDate')) {
     {
         $transaction = Transaction::whereId($transactionID)->first();
         $date = $transaction->created_at;
-        return $date->format('Y:m:d');
+        return $date->format('Y-m-d');
 
     }
 }

@@ -25,6 +25,7 @@ class TraInvoiceService
     private $password;
     private $routingKey;
     private $regID;
+    private $efd_serial;
 
     private $xml_doc = "<?xml version='1.0' encoding='UTF-8'?>";
     private $efdms_open = "<EFDMS>";
@@ -44,11 +45,12 @@ class TraInvoiceService
         $this->url = config('services.TRA.registerTestURL');
         $this->tin = config('services.TRA.TIN');
         $this->certKey = config('services.TRA.CertKey');
-        $this->GC = $this->RCTNUM;
+        $this->GC = 02;
         $this->username = "babaahaf8490uanx";
         $this->password = "Via(S3Ej0h3bjog[";
         $this->routingKey = "vfdrct";
         $this->regID = "TZ0100554863";
+        $this->efd_serial="10TZ100705";
 
         // Extract Client Public and Private Digital Signatures
         $path = storage_path() . '/' . 'app/public/VFD_PERGAMON_10TZ100705.pfx';
@@ -66,10 +68,7 @@ class TraInvoiceService
      */
     public function Register()
     {
-        //check if the user data exists
 
-
-        // Compute Signature with SHA1
         $payloadData = "<REGDATA><TIN>$this->tin</TIN><CERTKEY>$this->certKey</CERTKEY></REGDATA>";
         $payloadDataSignature = $this->signPayloadPlain($payloadData);
         $signedMessageRegistration = $this->xml_doc . $this->efdms_open . $payloadData . $this->efdms_signatureOpen . $payloadDataSignature . $this->efdms_signatureClose . $this->efdms_close;
@@ -84,7 +83,6 @@ class TraInvoiceService
         );
 
         $registrationACK = $this->sendRequest($urlReceipt, $headers, $signedMessageRegistration);
-        Log::info($registrationACK);
         return new SimpleXMLElement($registrationACK);
 
     }
@@ -106,7 +104,6 @@ class TraInvoiceService
         $tokenACKData = $this->sendRequest($urlReceipt, $headers, $authenticationData);
 
         $token = $tokenACKData['access_token'];
-        Log::info($tokenACKData);
 
         session(['TRA_token' => $token]);
 
@@ -120,25 +117,15 @@ class TraInvoiceService
     public function postInvoice(Transaction $transaction): array
     {
 
-        $receiptNO = "B1E489" . $transaction->id;
+        $receiptNO = "B1E489" . $this->GC;
         $transactionDate = getTransactionDate($transaction->id);
         $transactionTime = getTransactionTime($transaction->id);
-        $znum = getZnum();
-
 
         $token = $this->getToken();
-        Log::info($token);
 
-        $payloadData = "<RCT><DATE>$transactionDate</DATE><TIME>$transactionTime</TIME>
-<TIN>$this->tin</TIN><REGID>$this->regID</REGID><EFDSERIAL>10TZ100705</EFDSERIAL><CUSTIDTYPE>1</CUSTIDTYPE><CUSTID>111222333</CUSTID><CUSTNAME>RichardKazimoto</CUSTNAME><MOBILENUM>0713655545</MOBILENUM><RCTNUM>$transaction->id</RCTNUM><DC>$transaction->id</DC><GC>$transaction->id</GC><ZNUM>$znum</ZNUM><RCTVNUM>$receiptNO</RCTVNUM><ITEMS><ITEM><ID>1</ID><DESC>Sponsorship deal to TRAFC</DESC><QTY>1</QTY><TAXCODE>1</TAXCODE><AMT>20000.01</AMT></ITEM></ITEMS><TOTALS><TOTALTAXEXCL>$transaction->total_value</TOTALTAXEXCL><TOTALTAXINCL>38000.0</TOTALTAXINCL><DISCOUNT>0.00</DISCOUNT></TOTALS><PAYMENTS><PMTTYPE>CASH</PMTTYPE><PMTAMOUNT>$transaction->total_value</PMTAMOUNT></PAYMENTS><VATTOTALS><VATRATE>A</VATRATE><NETTAMOUNT>$transaction->total_value</NETTAMOUNT><TAXAMOUNT>0.00</TAXAMOUNT></VATTOTALS></RCT>";
-
-        Log::info($payloadData);
-
+       $payloadData = "<RCT><DATE>$transactionDate</DATE><TIME>$transactionTime</TIME><TIN>$this->tin</TIN><REGID>$this->regID</REGID><EFDSERIAL>$this->efd_serial</EFDSERIAL><CUSTIDTYPE>6</CUSTIDTYPE><CUSTID></CUSTID><CUSTNAME>tarimo shop manyanya mtambani</CUSTNAME><MOBILENUM></MOBILENUM><RCTNUM>1</RCTNUM><DC>1</DC><GC>2</GC><ZNUM>20210930</ZNUM><RCTVNUM>$receiptNO</RCTVNUM><ITEMS><ITEM><ID>609d20795e866461ac9a6563</ID><DESC>Mayonaise 12x946ml</DESC><QTY>11</QTY><TAXCODE>1</TAXCODE><AMT>602272.00</AMT></ITEM><ITEM><ID>609d20795e866461ac9a65af</ID><DESC>Peanut Butter 6x800gms</DESC><QTY>2</QTY><TAXCODE>1</TAXCODE><AMT>47011.20</AMT></ITEM><ITEM><ID>609d20795e866461affc9a6569</ID><DESC>Tomato sauce  Bei Bomba  5kgs</DESC><QTY>200</QTY><TAXCODE>1</TAXCODE><AMT>850780.00</AMT></ITEM></ITEMS><TOTALS><TOTALTAXEXCL>1271240.00</TOTALTAXEXCL><TOTALTAXINCL>1500063.2</TOTALTAXINCL><DISCOUNT>0.0</DISCOUNT></TOTALS><PAYMENTS><PMTTYPE>CASH</PMTTYPE><PMTAMOUNT>1500063.2</PMTAMOUNT></PAYMENTS><VATTOTALS><VATRATE>A</VATRATE><NETTAMOUNT>1271240.00</NETTAMOUNT><TAXAMOUNT>228823.20</TAXAMOUNT></VATTOTALS></RCT>";
         $payloadDataSignatureReceipt = $this->signPayloadPlain($payloadData);
-
         $signedMessageReceipt = $this->xml_doc . $this->efdms_open . $payloadData . $this->efdms_signatureOpen . $payloadDataSignatureReceipt . $this->efdms_signatureClose . $this->efdms_close;
-
-        Log::info($signedMessageReceipt);
 
 
         $urlReceipt = 'https://virtual.tra.go.tz/efdmsRctApi/api/efdmsRctInfo';
@@ -150,17 +137,12 @@ class TraInvoiceService
             'Client: WEBAPI',
             'Authorization: bearer ' . $token
         );
-        Log::info("header", $headers);
 
         $receiptACK = $this->sendRequest($urlReceipt, $headers, $signedMessageReceipt);
-
-        Log::info($receiptACK);
-
 
         $xmlACKReceipt = new SimpleXMLElement($receiptACK);
         $ackCodeReceipt = $xmlACKReceipt->RCTACK->ACKCODE;
         $ackReceiptMessage = $xmlACKReceipt->RCTACK->ACKMSG;
-
 
         $response["code"] = $ackCodeReceipt;
         $response["message"] = $ackReceiptMessage;
