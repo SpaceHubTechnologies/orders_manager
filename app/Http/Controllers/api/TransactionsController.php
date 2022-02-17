@@ -5,6 +5,7 @@ namespace App\Http\Controllers\api;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\PostTransactionRequest;
 use App\Jobs\PostInvoice;
+use App\Jobs\PostReceiptJob;
 use App\Models\Transaction;
 use App\Services\TraInvoiceService;
 use App\Transformers\Json;
@@ -56,15 +57,11 @@ class TransactionsController extends Controller
 
         $transactionRef = $transaction->reference;
         if ($transactionRef) {
-            //on creating the transaction send the payload to TRA
+            dispatch(new PostReceiptJob($transaction));
 
 
-            //call TRA services
-            //dispatch(new PostInvoice($transaction));
 
-            //$response = (new TraInvoiceService())->postInvoice($transaction);
-            $response = (new TraInvoiceService())->postZReport($transaction);
-            //$response = (new TraInvoiceService())->Register();
+         //   $response = (new TraInvoiceService())->postZReport($transaction);
 
 
             //success post to TRA return Response
@@ -78,7 +75,7 @@ class TransactionsController extends Controller
                     ->serializeWith(new ArraySerializer())
             ];*/
 
-            return $response;
+           // return $response;
 
             //return response()->json($response, 200, [], JSON_PRETTY_PRINT);
         } else {
