@@ -13,6 +13,7 @@ use App\Transformers\TransactionTransformer;
 use App\Transformers\UserTransformer;
 use GuzzleHttp\Exception\GuzzleException;
 use Illuminate\Support\Facades\DB;
+use Spatie\Fractalistic\ArraySerializer;
 
 class TransactionsController extends Controller
 {
@@ -58,26 +59,16 @@ class TransactionsController extends Controller
         $transactionRef = $transaction->reference;
         if ($transactionRef) {
             dispatch(new PostReceiptJob($transaction));
-
-
-
-         //   $response = (new TraInvoiceService())->postZReport($transaction);
-
-
-            //success post to TRA return Response
-            $includes = ['customer'];
-            /*$response = [
+            $response = [
                 'error' => false,
                 'message' => 'Transaction Created Successfully',
                 'transaction' => fractal()
                     ->item($transaction, new TransactionTransformer())
-                    ->parseIncludes($includes)
                     ->serializeWith(new ArraySerializer())
-            ];*/
+            ];
 
-           // return $response;
 
-            //return response()->json($response, 200, [], JSON_PRETTY_PRINT);
+            return response()->json($response, 200, [], JSON_PRETTY_PRINT);
         } else {
             return response()->json(Json::response(true, 'OOps ! Something went wrong please try again'), 400);
         }
