@@ -53,7 +53,7 @@ class TraInvoiceService
         $this->efd_serial = "10TZ100705";
 
         // Extract Client Public and Private Digital Signatures
-        $path = storage_path() . '/' . 'app/public/VFD_PERGAMON_10TZ100705.pfx';
+        $path = storage_path() . '/' . 'files/VFD_PERGAMON_10TZ100705.pfx';
 
         $cert_store = file_get_contents($path);
         $clientSignature = openssl_pkcs12_read($cert_store, $cert_info, 'P3gAmon');
