@@ -1,6 +1,7 @@
 <?php
 
 use App\Models\Transaction;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Str;
 
 if (!function_exists('generate_transaction_reference')) {
@@ -69,11 +70,14 @@ if (!function_exists('getDailyCounter')) {
 }
 
 if (!function_exists('getZnum')) {
-    function getZnum()
+    function getZnum($transactionID)
     {
-        $data = date('y.m.d');
+        $transaction = Transaction::whereId($transactionID)->first();
 
-        return 202220203;
+      /*  $year = $transaction->created_at->year;
+        $day = date('d', $transaction->created_at);*/
+
+        return 20220215;
 
     }
 }
