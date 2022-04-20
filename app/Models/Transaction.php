@@ -55,6 +55,8 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
  * @method static Builder|Transaction whereStatus($value)
  * @method static Builder|Transaction whereTotalPaid($value)
  * @method static Builder|Transaction whereTotalValue($value)
+ * @property int $post_receipt_status
+ * @method static Builder|Transaction wherePostReceiptStatus($value)
  */
 class Transaction extends Model
 {

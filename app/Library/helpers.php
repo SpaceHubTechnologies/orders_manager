@@ -1,5 +1,6 @@
 <?php
 
+use App\Models\CommandManager;
 use App\Models\Transaction;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Str;
@@ -35,6 +36,11 @@ if (!function_exists('transaction_code_exist')) {
 }
 
 if (!function_exists('getTransactionTime')) {
+    /**
+     * Get Transaction Time
+     * @param $transactionID
+     * @return string
+     */
     function getTransactionTime($transactionID): string
     {
         $transaction = Transaction::whereId($transactionID)->first();
@@ -45,6 +51,11 @@ if (!function_exists('getTransactionTime')) {
 }
 
 if (!function_exists('getTransactionDate')) {
+    /**
+     * Get Transaction Date
+     * @param $transactionID
+     * @return string
+     */
     function getTransactionDate($transactionID): string
     {
         $transaction = Transaction::whereId($transactionID)->first();
@@ -55,6 +66,11 @@ if (!function_exists('getTransactionDate')) {
 }
 
 if (!function_exists('generateRCTNo')) {
+    /**
+     * Generate receipt No
+     * @param $transactionID
+     * @return string
+     */
     function generateRCTNo($transactionID): string
     {
         $transaction = Transaction::whereId($transactionID)->first();
@@ -62,30 +78,68 @@ if (!function_exists('generateRCTNo')) {
 
     }
 }
-if (!function_exists('getDailyCounter')) {
-    function getDailyCounter(Transaction $transaction)
+
+if (!function_exists('handleCommand')) {
+    /**
+     * Handle commands
+     * @param $payload
+     * @return void
+     */
+    function handleCommand($payload)
     {
+        if ($payload['command'] === 'BLOCK') {
 
-    }
-}
+            $commandManager = new CommandManager();
+            $commandManager->customer_id = $payload['customer_id'];
+            $commandManager->block_receipt = true;
+            $commandManager->block_reason = $payload['message'];
+            $commandManager->save();
+        }
+        //unblock the user
+        if ($payload['command'] === 'UNBLOCK') {
 
-if (!function_exists('getZnum')) {
-    function getZnum($transactionID)
-    {
-        $transaction = Transaction::whereId($transactionID)->first();
+            $customerId = $payload['customer_id'];
 
-      /*  $year = $transaction->created_at->year;
-        $day = date('d', $transaction->created_at);*/
+            $userCommand = CommandManager::whereCustomerId($customerId)->first();
+            if ($userCommand) {
+                $userCommand->block_receipt = false;
+                $userCommand->block_reason = null;
+                $userCommand->update();
+            }
 
-        return 20220215;
+        }
+        //enable VAT
 
-    }
-}
+        if ($payload['command'] === 'ENABLEVAT') {
 
-if (!function_exists('generateRecieptNo')) {
-    function generateRecieptNo()
-    {
+            $commandManager = new CommandManager();
+            $commandManager->customer_id = $payload['customer_id'];
+            $commandManager->is_vat_enabled = true;
+            $commandManager->save();
+        }
+        //DISABLE VAT
 
+        if ($payload['command'] === 'DISBLEVAT') {
+
+            $customerId = $payload['customer_id'];
+
+            $userCommand = CommandManager::whereCustomerId($customerId)->first();
+            if ($userCommand) {
+                $userCommand->is_vat_enabled = false;
+                $userCommand->update();
+            }
+        }
+
+        //CHANGE QR CODE SEQUENCE
+        if ($payload['command'] === 'RCTVCODE') {
+
+            $commandManager = new CommandManager();
+            $commandManager->customer_id = $payload['customer_id'];
+            $commandManager->change_qr_code = true;
+            $commandManager->new_qr_code = $payload['RCTVCODE'];
+            $commandManager->save();
+
+        }
 
     }
 }
