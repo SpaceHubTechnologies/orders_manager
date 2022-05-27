@@ -19,6 +19,8 @@
         "spatie/laravel-fractal": "^5.8"
     },
     "require-dev": {
+        "roave/security-advisories": "dev-latest"
+        ,
         "barryvdh/laravel-ide-helper": "^2.12",
         "facade/ignition": "^2.5",
         "fakerphp/faker": "^1.9.1",

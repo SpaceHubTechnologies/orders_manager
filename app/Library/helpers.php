@@ -85,22 +85,20 @@ if (!function_exists('handleCommand')) {
      * @param $payload
      * @return void
      */
-    function handleCommand($payload)
+    function handleCommand($payload, $customerID)
     {
-        if ($payload['command'] === 'BLOCK') {
+        if ($payload['ACKCODE'] === 8) {
 
             $commandManager = new CommandManager();
-            $commandManager->customer_id = $payload['customer_id'];
+            $commandManager->customer_id = $customerID;
             $commandManager->block_receipt = true;
-            $commandManager->block_reason = $payload['message'];
+            $commandManager->block_reason = $payload['ACKMSG'];
             $commandManager->save();
         }
         //unblock the user
-        if ($payload['command'] === 'UNBLOCK') {
+        if ($payload['ACKCODE'] === 7) {
 
-            $customerId = $payload['customer_id'];
-
-            $userCommand = CommandManager::whereCustomerId($customerId)->first();
+            $userCommand = CommandManager::whereCustomerId($customerID)->first();
             if ($userCommand) {
                 $userCommand->block_receipt = false;
                 $userCommand->block_reason = null;
@@ -110,20 +108,17 @@ if (!function_exists('handleCommand')) {
         }
         //enable VAT
 
-        if ($payload['command'] === 'ENABLEVAT') {
-
+        if ($payload['ACKCODE'] === 18) {
             $commandManager = new CommandManager();
-            $commandManager->customer_id = $payload['customer_id'];
+            $commandManager->customer_id = $customerID;
             $commandManager->is_vat_enabled = true;
             $commandManager->save();
         }
         //DISABLE VAT
 
-        if ($payload['command'] === 'DISBLEVAT') {
+        if ($payload['ACKCODE'] === 18) {
 
-            $customerId = $payload['customer_id'];
-
-            $userCommand = CommandManager::whereCustomerId($customerId)->first();
+            $userCommand = CommandManager::whereCustomerId($customerID)->first();
             if ($userCommand) {
                 $userCommand->is_vat_enabled = false;
                 $userCommand->update();
@@ -134,7 +129,7 @@ if (!function_exists('handleCommand')) {
         if ($payload['command'] === 'RCTVCODE') {
 
             $commandManager = new CommandManager();
-            $commandManager->customer_id = $payload['customer_id'];
+            $commandManager->customer_id = $customerID;
             $commandManager->change_qr_code = true;
             $commandManager->new_qr_code = $payload['RCTVCODE'];
             $commandManager->save();
@@ -142,6 +137,7 @@ if (!function_exists('handleCommand')) {
         }
 
     }
+
 }
 
 

@@ -42,13 +42,12 @@ class PostReceiptCommand extends Command
     public function handle()
     {
         $transactionID = $this->argument('transaction');
-        if ($transactionID != null) {
+        if ($transactionID !== null) {
             $this->info('fetching the transaction');
             $transaction = Transaction::whereId($transactionID)->first();
-            if ($transaction != null) {
+            if ($transaction !== null) {
                 //post receipt
-                if ($transaction->post_receipt_status == 0) {
-                    //check if the receipt was posted already
+                if ($transaction->post_receipt_status === 0) {
                     $receiptResponse = (new TraInvoiceService())->postInvoice($transaction);
                     $responseCode = $receiptResponse['code'];
                     Log::info($receiptResponse['code']);

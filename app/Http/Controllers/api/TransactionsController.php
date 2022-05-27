@@ -6,26 +6,72 @@ use App\Http\Controllers\Controller;
 use App\Http\Requests\PostTransactionRequest;
 use App\Jobs\PostInvoice;
 use App\Jobs\PostReceiptJob;
+use App\Models\CommandManager;
 use App\Models\Transaction;
 use App\Services\TraInvoiceService;
 use App\Transformers\Json;
 use App\Transformers\TransactionTransformer;
 use App\Transformers\UserTransformer;
+use Exception;
 use GuzzleHttp\Exception\GuzzleException;
+use Illuminate\Http\JsonResponse;
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Spatie\Fractalistic\ArraySerializer;
 
 class TransactionsController extends Controller
 {
+
+    /**
+     * Check Customer Status
+     * @throws Exception
+     */
+    public function init(Request $request): JsonResponse
+    {
+
+
+        $customerID = $request->customer_id;
+
+        //update status from TRA
+        (new TraInvoiceService())->getToken($customerID);
+
+        //load status from Dbase
+        $commandStatus = CommandManager::whereCustomerId($customerID)->first();
+        $response = [];
+
+        if (!empty($commandStatus)) {
+            $response['code'] = 200;
+            $response['message'] = "Ok";
+        }
+        if ($commandStatus->is_blocked) {
+            $response['code'] = 500;
+            $response['message'] = "Customer is Blocked";
+            $response['details'] = $commandStatus->block_reason;
+        }
+
+        if (!$commandStatus->is_vat_enabled) {
+            $response['code'] = 500;
+            $response['message'] = "VAT is Disabled";
+        }
+
+        if (!$commandStatus->change_qr_code) {
+            $response['code'] = 500;
+            $response['message'] = "Change QR CODE";
+            $response['details'] = $commandStatus->new_qr_code;
+        }
+
+        return response()->json($response);
+
+
+    }
+
     /**
      * @throws GuzzleException
-     * @throws \Exception
+     * @throws Exception
      */
     public function createTransaction(PostTransactionRequest $request)
     {
-        //check if user is logged in
 
-        //check the payment API response
         $customer_id = $request->customer_id;
         $code_sale_master = $request->code_sale_master;
         $status = $request->status;
