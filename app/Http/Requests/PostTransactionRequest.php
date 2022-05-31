@@ -5,7 +5,7 @@ namespace App\Http\Requests;
 use Illuminate\Contracts\Validation\Validator;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Http\Exceptions\HttpResponseException;
-use Symfony\Component\HttpFoundation\JsonResponse;
+use Symfony\Component\HttpFoundation\Response;
 
 class PostTransactionRequest extends FormRequest
 {
@@ -36,10 +36,6 @@ class PostTransactionRequest extends FormRequest
             'total_paid' => ['required'],
             'sale_type' => ['required'],
             'customerIdType' => ['required'],
-        /*    'customerId' => ['required'],
-            'customerName' => ['required'],
-            'mobileNumber' => ['required'],
-            'description' => ['required'],*/
         ];
     }
 
@@ -47,6 +43,6 @@ class PostTransactionRequest extends FormRequest
     {
         $messageBag = collect($validator->errors()->messages());
         $message = implode('|', $messageBag->flatten()->toArray());
-        throw new HttpResponseException(response()->json(['error' => true, 'message' => $message], JsonResponse::HTTP_UNPROCESSABLE_ENTITY));
+        throw new HttpResponseException(response()->json(['error' => true, 'message' => $message], Response::HTTP_UNPROCESSABLE_ENTITY));
     }
 }

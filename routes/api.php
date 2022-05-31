@@ -24,6 +24,8 @@ Route::group(['prefix' => 'v1'], static function () {
     Route::post('login', [UsersController::class, 'login']);
 
  /*   Route::group(['middleware' => ['auth:api']], static function () {*/
+        Route::post('init', [TransactionsController::class, 'init']);
+
         Route::post('post-transaction', [TransactionsController::class, 'createTransaction']);
 /*    });*/
 
