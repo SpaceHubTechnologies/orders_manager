@@ -91,40 +91,29 @@ class TraInvoiceService
      */
     public function getToken($customerID)
     {
-        $username = "hgfhgfh";
+        $username = $this->username;
         $password = $this->password;
         $urlReceipt = 'https://virtual.tra.go.tz/efdmsRctApi/vfdtoken';
         $headers = '';
         $authenticationData = "username=$username&password=$password&grant_type=password";
-
-        try {
-            $tokenACKData = $this->sendRequest($urlReceipt, $headers, $authenticationData);
-        } catch (Exception $e) {
-
-            Log::info($e->getMessage());
-            return $e->getMessage();
-        }
+        $tokenACKData = $this->sendRequest($urlReceipt, $headers, $authenticationData);
 
 
         if (in_array('invalid_grant', $tokenACKData, true)) {
-
-            //handle commands if any
-            $payload = $tokenACKData['ACKCODE'];
-            handleCommand($payload, $customerID);
+            if (isset($tokenACKData['ACKCODE'])) {
+                $payload = $tokenACKData['ACKCODE'];
+                handleCommand($payload, $customerID);
+            }
 
             return response()->json('Something went wrong please try again later', 500);
 
         }
 
+        $token = $tokenACKData['access_token'];
 
-        if (in_array('access_token', $tokenACKData, true)) {
+        session(['TRA_token' => $token]);
 
-            $token = $tokenACKData['access_token'];
-
-            session(['TRA_token' => $token]);
-
-            return $token;
-        }
+        return $token;
 
 
     }
@@ -141,6 +130,9 @@ class TraInvoiceService
         $transactionTime = getTransactionTime($transaction->id);
 
         $token = $this->getToken($transaction->customer_id);
+
+        Log::info($token);
+        Log::info("Here is the token");
         if ($token) {
 
             $payloadData = "<RCT><DATE>$transactionDate</DATE><TIME>$transactionTime</TIME><TIN>$this->tin</TIN><REGID>$this->regID</REGID><EFDSERIAL>$this->efd_serial</EFDSERIAL><CUSTIDTYPE>6</CUSTIDTYPE><CUSTID></CUSTID><CUSTNAME>tarimo shop manyanya mtambani</CUSTNAME><MOBILENUM></MOBILENUM><RCTNUM>1</RCTNUM><DC>1</DC><GC>2</GC><ZNUM>20210930</ZNUM><RCTVNUM>$receiptNO</RCTVNUM><ITEMS><ITEM><ID>609d20795e866461ac9a6563</ID><DESC>Mayonaise 12x946ml</DESC><QTY>11</QTY><TAXCODE>1</TAXCODE><AMT>602272.00</AMT></ITEM><ITEM><ID>609d20795e866461ac9a65af</ID><DESC>Peanut Butter 6x800gms</DESC><QTY>2</QTY><TAXCODE>1</TAXCODE><AMT>47011.20</AMT></ITEM><ITEM><ID>609d20795e866461affc9a6569</ID><DESC>Tomato sauce  Bei Bomba  5kgs</DESC><QTY>200</QTY><TAXCODE>1</TAXCODE><AMT>850780.00</AMT></ITEM></ITEMS><TOTALS><TOTALTAXEXCL>1271240.00</TOTALTAXEXCL><TOTALTAXINCL>1500063.2</TOTALTAXINCL><DISCOUNT>0.0</DISCOUNT></TOTALS><PAYMENTS><PMTTYPE>CASH</PMTTYPE><PMTAMOUNT>1500063.2</PMTAMOUNT></PAYMENTS><VATTOTALS><VATRATE>A</VATRATE><NETTAMOUNT>1271240.00</NETTAMOUNT><TAXAMOUNT>228823.20</TAXAMOUNT></VATTOTALS></RCT>";
@@ -186,7 +178,7 @@ class TraInvoiceService
         $znumber = getZnum($transaction->id);
 
 
-        $token = $this->getToken();
+        $token = $this->getToken($transaction->id);
 
         $z_report = "<ZREPORT><DATE>$transactionDate</DATE><TIME>$transactionTime</TIME><HEADER><LINE>PERGAMON GROUP LIMITED</LINE><LINE>MWAIKIBAKI RD MIKOCHENI OPP MWINYI RESIDENCE</LINE><LINE>TEL NO:+255 716684002</LINE><LINE>DAR ES SALAAM,TANZANIA</LINE></HEADER><VRN>40006908G</VRN><TIN>$this->tin</TIN><TAXOFFICE>Kinondoni</TAXOFFICE><REGID>$this->regID</REGID><ZNUMBER>$znumber</ZNUMBER><EFDSERIAL>$this->efd_serial</EFDSERIAL><REGISTRATIONDATE>2022-02-03</REGISTRATIONDATE><USER>09VFDWEBAPI-10131758711078151210TZ100705</USER><SIMIMSI>WEBAPI</SIMIMSI><TOTALS><DAILYTOTALAMOUNT>2143250.00</DAILYTOTALAMOUNT><GROSS>513880841.00</GROSS><CORRECTIONS>0.00</CORRECTIONS><DISCOUNTS>0.00</DISCOUNTS><SURCHARGES>0.00</SURCHARGES><TICKETSVOID>0</TICKETSVOID><TICKETSVOIDTOTAL>0.00</TICKETSVOIDTOTAL><TICKETSFISCAL>36</TICKETSFISCAL><TICKETSNONFISCAL>6</TICKETSNONFISCAL></TOTALS><VATTOTALS><VATRATE>A-18.00</VATRATE><NETTAMOUNT>1816313.55</NETTAMOUNT><TAXAMOUNT>326936.45</TAXAMOUNT><VATRATE>B-0.00</VATRATE><NETTAMOUNT>0.00</NETTAMOUNT><TAXAMOUNT>0.00</TAXAMOUNT><VATRATE>C-0.00</VATRATE><NETTAMOUNT>0.00</NETTAMOUNT><TAXAMOUNT>0.00</TAXAMOUNT><VATRATE>D-0.00</VATRATE><NETTAMOUNT>0.00</NETTAMOUNT><TAXAMOUNT>0.00</TAXAMOUNT><VATRATE>E-0.00</VATRATE><NETTAMOUNT>0.00</NETTAMOUNT><TAXAMOUNT>0.00</TAXAMOUNT></VATTOTALS><PAYMENTS><PMTTYPE>CASH</PMTTYPE><PMTAMOUNT>2143250.00</PMTAMOUNT><PMTTYPE>CHEQUE</PMTTYPE><PMTAMOUNT>0.00</PMTAMOUNT><PMTTYPE>CCARD</PMTTYPE><PMTAMOUNT>0.00</PMTAMOUNT><PMTTYPE>EMONEY</PMTTYPE><PMTAMOUNT>0.00</PMTAMOUNT><PMTTYPE>INVOICE</PMTTYPE><PMTAMOUNT>0.00</PMTAMOUNT></PAYMENTS><CHANGES><VATCHANGENUM>0</VATCHANGENUM><HEADCHANGENUM>0</HEADCHANGENUM></CHANGES><ERRORS></ERRORS><FWVERSION>3.0</FWVERSION><FWCHECKSUM>WEBAPI</FWCHECKSUM></ZREPORT>";
 
@@ -204,8 +196,7 @@ class TraInvoiceService
             'Authorization: bearer ' . $token
         );
 
-        $zReportACK = $this->sendRequest($urlZReport, $headers, $signedMessageZReport);
-        return $zReportACK;
+        return $this->sendRequest($urlZReport, $headers, $signedMessageZReport);
     }
 
     /**

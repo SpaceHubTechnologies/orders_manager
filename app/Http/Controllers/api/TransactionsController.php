@@ -28,37 +28,35 @@ class TransactionsController extends Controller
      */
     public function init(Request $request): JsonResponse
     {
-
-
         $customerID = $request->customer_id;
-
-        //update status from TRA
         (new TraInvoiceService())->getToken($customerID);
 
-        //load status from Dbase
         $commandStatus = CommandManager::whereCustomerId($customerID)->first();
         $response = [];
 
         if (!empty($commandStatus)) {
-            $response['code'] = 200;
-            $response['message'] = "Ok";
-        }
-        if ($commandStatus->is_blocked) {
-            $response['code'] = 500;
-            $response['message'] = "Customer is Blocked";
-            $response['details'] = $commandStatus->block_reason;
+            if ($commandStatus->is_blocked) {
+
+                $response['code'] = 500;
+                $response['message'] = "Customer is Blocked";
+                $response['details'] = $commandStatus->block_reason;
+            }
+
+            if (!$commandStatus->is_vat_enabled) {
+                $response['code'] = 500;
+                $response['message'] = "VAT is Disabled";
+            }
+
+            if (!$commandStatus->change_qr_code) {
+                $response['code'] = 500;
+                $response['message'] = "Change QR CODE";
+                $response['details'] = $commandStatus->new_qr_code;
+            }
         }
 
-        if (!$commandStatus->is_vat_enabled) {
-            $response['code'] = 500;
-            $response['message'] = "VAT is Disabled";
-        }
 
-        if (!$commandStatus->change_qr_code) {
-            $response['code'] = 500;
-            $response['message'] = "Change QR CODE";
-            $response['details'] = $commandStatus->new_qr_code;
-        }
+        $response['code'] = 200;
+        $response['message'] = "Ok";
 
         return response()->json($response);
 
@@ -66,7 +64,6 @@ class TransactionsController extends Controller
     }
 
     /**
-     * @throws GuzzleException
      * @throws Exception
      */
     public function createTransaction(PostTransactionRequest $request)
@@ -115,9 +112,9 @@ class TransactionsController extends Controller
 
 
             return response()->json($response, 200, [], JSON_PRETTY_PRINT);
-        } else {
-            return response()->json(Json::response(true, 'OOps ! Something went wrong please try again'), 400);
         }
+
+        return response()->json(Json::response(true, 'OOps ! Something went wrong please try again'), 400);
 
     }
 
